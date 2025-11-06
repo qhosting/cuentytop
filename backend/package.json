@@ -69,6 +69,7 @@
     "sharp": "^0.32.6",
     "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.3",
+    "web-push": "^3.6.6",
     "csv-parser": "^3.0.0",
     "json2csv": "^6.0.0-alpha.2",
     "express-session": "^1.17.3",

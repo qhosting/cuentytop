@@ -20,6 +20,7 @@ const cartRoutes = require('./routes/cartRoutes');
 const ordenRoutes = require('./routes/ordenRoutes');
 const speiRoutes = require('./routes/speiRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const fase2Routes = require('./routes/fase2Routes');
 
 // Crear aplicación Express
 const app = express();
@@ -189,6 +190,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/ordenes', ordenRoutes);
 app.use('/api/spei', speiRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/fase2', fase2Routes);
 
 // ================================
 // MANEJO DE ERRORES
