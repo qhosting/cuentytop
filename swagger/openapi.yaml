@@ -1,0 +1,897 @@
+openapi: 3.0.3
+
+info:
+  title: CUENTY API - Enterprise
+  description: |
+    API REST completa para el sistema CUENTY de gestión de suscripciones para el mercado mexicano.
+    
+    ## Características
+    - Autenticación JWT + API Keys
+    - Rate limiting: 100 requests/minuto
+    - Webhooks para integraciones
+    - SDKs disponibles: Node.js, Python, PHP
+    
+    ## Ambiente
+    - Base URL Producción: https://api.cuenty.com/v1
+    - Base URL Sandbox: https://sandbox.api.cuenty.com/v1
+    
+  version: 3.0.0
+  contact:
+    name: CUENTY API Support
+    email: api@cuenty.com
+    url: https://cuenty.com/docs
+  license:
+    name: Propietario
+    url: https://cuenty.com/legal/api-terms
+
+servers:
+  - url: https://api.cuenty.com/v1
+    description: Servidor de Producción
+  - url: https://sandbox.api.cuenty.com/v1
+    description: Servidor de Sandbox
+
+tags:
+  - name: Authentication
+    description: Endpoints de autenticación y gestión de sesiones
+  - name: Users
+    description: Gestión de usuarios y perfiles
+  - name: Subscriptions
+    description: Gestión de suscripciones y planes
+  - name: Payments
+    description: Pagos SPEI, CoDi y banking integraciones
+  - name: Analytics
+    description: Reportes, métricas y predicciones
+  - name: Webhooks
+    description: Configuración de webhooks
+  - name: Admin
+    description: Endpoints administrativos
+  - name: Chatwoot
+    description: Integración con Chatwoot
+
+# ==========================================================================
+# SECURITY SCHEMES
+# ==========================================================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtenido del endpoint /auth/login
+    
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API Key para desarrolladores externos
+  
+  # ==========================================================================
+  # SCHEMAS
+  # ==========================================================================
+  schemas:
+    # Error responses
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: INVALID_REQUEST
+            message:
+              type: string
+              example: El campo email es requerido
+            details:
+              type: object
+    
+    # Auth
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: usuario@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+    
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+        expiresIn:
+          type: string
+          example: 24h
+    
+    # User
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: usuario@example.com
+        name:
+          type: string
+          example: Juan Pérez
+        phone:
+          type: string
+          example: +525512345678
+        role:
+          type: string
+          enum: [customer, admin]
+          example: customer
+        createdAt:
+          type: string
+          format: date-time
+    
+    # Subscription
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        serviceName:
+          type: string
+          example: Netflix Premium
+        provider:
+          type: string
+          example: Netflix
+        status:
+          type: string
+          enum: [active, pending, expired, cancelled]
+          example: active
+        startDate:
+          type: string
+          format: date
+        expiryDate:
+          type: string
+          format: date
+        monthlyPrice:
+          type: number
+          format: decimal
+          example: 299.00
+        currency:
+          type: string
+          example: MXN
+    
+    # Payment
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        amount:
+          type: number
+          format: decimal
+          example: 299.00
+        currency:
+          type: string
+          example: MXN
+        paymentMethod:
+          type: string
+          enum: [spei, codi, card, bank_transfer]
+          example: spei
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded]
+          example: completed
+        reference:
+          type: string
+          example: SPEI123456789
+        createdAt:
+          type: string
+          format: date-time
+    
+    # Analytics Event
+    AnalyticsEvent:
+      type: object
+      required:
+        - eventType
+        - eventName
+      properties:
+        eventType:
+          type: string
+          example: page_view
+        eventName:
+          type: string
+          example: home_viewed
+        properties:
+          type: object
+          additionalProperties: true
+        sessionId:
+          type: string
+          example: sess_123456
+    
+    # Webhook
+    Webhook:
+      type: object
+      required:
+        - url
+        - events
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://mi-app.com/webhooks/cuenty
+        events:
+          type: array
+          items:
+            type: string
+          example: [payment.completed, subscription.activated]
+        secret:
+          type: string
+          description: Secret para verificar firma HMAC
+          example: whsec_123456789
+
+# ==========================================================================
+# PATHS
+# ==========================================================================
+paths:
+  # ==========================================================================
+  # AUTHENTICATION
+  # ==========================================================================
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Iniciar sesión
+      description: Autenticar usuario y obtener token JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Registrar nuevo usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+                - phone
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                name:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        '201':
+          description: Usuario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /auth/2fa/send:
+    post:
+      tags:
+        - Authentication
+      summary: Enviar código 2FA
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+                  enum: [sms, whatsapp]
+      responses:
+        '200':
+          description: Código enviado exitosamente
+  
+  /auth/2fa/verify:
+    post:
+      tags:
+        - Authentication
+      summary: Verificar código 2FA
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  example: "123456"
+      responses:
+        '200':
+          description: Código verificado exitosamente
+        '400':
+          description: Código inválido
+  
+  # ==========================================================================
+  # USERS
+  # ==========================================================================
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Obtener perfil del usuario autenticado
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Perfil del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    
+    put:
+      tags:
+        - Users
+      summary: Actualizar perfil del usuario
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        '200':
+          description: Perfil actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  
+  /users/me/subscriptions:
+    get:
+      tags:
+        - Users
+      summary: Obtener suscripciones del usuario
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, pending, expired, cancelled]
+      responses:
+        '200':
+          description: Lista de suscripciones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscriptions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subscription'
+                  total:
+                    type: integer
+  
+  # ==========================================================================
+  # SUBSCRIPTIONS
+  # ==========================================================================
+  /subscriptions:
+    get:
+      tags:
+        - Subscriptions
+      summary: Listar todas las suscripciones disponibles
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: provider
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Lista de suscripciones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscriptions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subscription'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+  
+  /subscriptions/{id}:
+    get:
+      tags:
+        - Subscriptions
+      summary: Obtener detalles de una suscripción
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalles de la suscripción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '404':
+          description: Suscripción no encontrada
+  
+  /subscriptions/{id}/activate:
+    post:
+      tags:
+        - Subscriptions
+      summary: Activar una suscripción
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Suscripción activada exitosamente
+        '400':
+          description: Error al activar suscripción
+  
+  # ==========================================================================
+  # PAYMENTS
+  # ==========================================================================
+  /payments:
+    get:
+      tags:
+        - Payments
+      summary: Listar pagos del usuario
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, completed, failed, refunded]
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Lista de pagos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payment'
+                  total:
+                    type: integer
+    
+    post:
+      tags:
+        - Payments
+      summary: Crear nuevo pago
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - paymentMethod
+                - orderId
+              properties:
+                amount:
+                  type: number
+                  format: decimal
+                paymentMethod:
+                  type: string
+                  enum: [spei, codi, card, bank_transfer]
+                orderId:
+                  type: integer
+      responses:
+        '201':
+          description: Pago creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+  
+  /payments/spei/generate:
+    post:
+      tags:
+        - Payments
+      summary: Generar referencia SPEI
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderId
+                - amount
+              properties:
+                orderId:
+                  type: integer
+                amount:
+                  type: number
+                  format: decimal
+      responses:
+        '200':
+          description: Referencia SPEI generada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reference:
+                    type: string
+                  clabe:
+                    type: string
+                  amount:
+                    type: number
+                  expiresAt:
+                    type: string
+                    format: date-time
+  
+  /payments/codi/generate:
+    post:
+      tags:
+        - Payments
+      summary: Generar QR CoDi
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderId
+                - amount
+              properties:
+                orderId:
+                  type: integer
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: QR CoDi generado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  qrCode:
+                    type: string
+                    description: Base64 encoded QR image
+                  codiReference:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+  
+  # ==========================================================================
+  # ANALYTICS
+  # ==========================================================================
+  /analytics/events:
+    post:
+      tags:
+        - Analytics
+      summary: Registrar evento de analytics
+      security:
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsEvent'
+      responses:
+        '201':
+          description: Evento registrado exitosamente
+  
+  /analytics/dashboard:
+    get:
+      tags:
+        - Analytics
+      summary: Obtener métricas del dashboard
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Métricas del dashboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalUsers:
+                    type: integer
+                  activeSubscriptions:
+                    type: integer
+                  totalRevenue:
+                    type: number
+                  conversionRate:
+                    type: number
+                  topStates:
+                    type: array
+                    items:
+                      type: object
+  
+  /analytics/predictions/churn:
+    get:
+      tags:
+        - Analytics
+      summary: Obtener predicciones de churn
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Predicciones de churn
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  predictions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        userId:
+                          type: integer
+                        churnProbability:
+                          type: number
+                        confidenceScore:
+                          type: number
+  
+  # ==========================================================================
+  # WEBHOOKS
+  # ==========================================================================
+  /webhooks:
+    get:
+      tags:
+        - Webhooks
+      summary: Listar webhooks configurados
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Lista de webhooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+    
+    post:
+      tags:
+        - Webhooks
+      summary: Crear nuevo webhook
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+      responses:
+        '201':
+          description: Webhook creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+  
+  /webhooks/{id}:
+    delete:
+      tags:
+        - Webhooks
+      summary: Eliminar webhook
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Webhook eliminado exitosamente
+  
+  # ==========================================================================
+  # ADMIN
+  # ==========================================================================
+  /admin/users:
+    get:
+      tags:
+        - Admin
+      summary: Listar todos los usuarios (admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    type: object
+  
+  /admin/analytics/reports:
+    get:
+      tags:
+        - Admin
+      summary: Obtener reportes administrativos
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: reportType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [sales, users, services, revenue]
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Reporte generado
+          content:
+            application/json:
+              schema:
+                type: object
+
+# ==========================================================================
+# SECURITY (Global)
+# ==========================================================================
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
