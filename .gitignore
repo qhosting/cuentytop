@@ -777,6 +777,8 @@
 **/*.jks
 **/*.keystore
 **/secrets/
+**/.git-credentials
+**/COMMIT_READY.md
 **/credentials/
 **/.secrets/
 **/.credentials/
