@@ -49,19 +49,56 @@ app.post('/send/whatsapp', async (req, res) => {
     try {
         const { phone, message } = req.body;
         
-        await twilioClient.messages.create({
-            body: message,
-            from: `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`,
-            to: `whatsapp:${phone}`
-        });
-        
-        await pool.query(
-            'INSERT INTO notifications (type, recipient, message, status) VALUES ($1, $2, $3, $4)',
-            ['whatsapp', phone, message, 'sent']
-        );
-        
-        res.json({ message: 'WhatsApp enviado exitosamente' });
+        // Check if WAHA is configured
+        if (process.env.WAHA_ENDPOINT) {
+            // WAHA Implementation
+            const wahaUrl = `${process.env.WAHA_ENDPOINT}/api/sendText`;
+            const payload = {
+                session: process.env.WAHA_SESSION || 'default',
+                chatId: `${phone.replace('+', '')}@c.us`,
+                text: message
+            };
+
+            const headers = { 'Content-Type': 'application/json' };
+            if (process.env.WAHA_KEY) {
+                headers['X-Api-Key'] = process.env.WAHA_KEY;
+            }
+
+            const response = await fetch(wahaUrl, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`WAHA Error: ${errorText}`);
+            }
+
+            await pool.query(
+                'INSERT INTO notifications (type, recipient, message, status, provider) VALUES ($1, $2, $3, $4, $5)',
+                ['whatsapp', phone, message, 'sent', 'waha']
+            );
+
+            res.json({ message: 'WhatsApp enviado exitosamente vía WAHA' });
+
+        } else {
+            // Fallback to Twilio
+            await twilioClient.messages.create({
+                body: message,
+                from: `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`,
+                to: `whatsapp:${phone}`
+            });
+
+            await pool.query(
+                'INSERT INTO notifications (type, recipient, message, status, provider) VALUES ($1, $2, $3, $4, $5)',
+                ['whatsapp', phone, message, 'sent', 'twilio']
+            );
+
+            res.json({ message: 'WhatsApp enviado exitosamente vía Twilio' });
+        }
     } catch (error) {
+        console.error('WhatsApp Send Error:', error);
         res.status(500).json({ error: { code: 'WHATSAPP_ERROR', message: error.message } });
     }
 });

@@ -12,6 +12,8 @@ const axios = require('axios');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
 const { body, validationResult } = require('express-validator');
+// MercadoPago
+const { MercadoPagoConfig, Preference } = require('mercadopago');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -241,6 +243,13 @@ const bbva = new BBVAIntegration();
 const santander = new SantanderIntegration();
 const banorte = new BanorteIntegration();
 
+// MercadoPago Integration
+let mpClient = null;
+if (process.env.MP_ACCESS_TOKEN) {
+    mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+    console.log('MercadoPago configured');
+}
+
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
@@ -459,6 +468,99 @@ app.post('/codi/generate', [
         });
     }
 });
+
+/**
+ * POST /mercadopago/create_preference - Crear preferencia de pago MP
+ */
+app.post('/mercadopago/create_preference', [
+    body('orderId').isInt(),
+    body('amount').isFloat({ min: 1 }),
+    body('title').isString()
+], async (req, res) => {
+    if (!mpClient) {
+        return res.status(503).json({
+            error: { code: 'SERVICE_UNAVAILABLE', message: 'MercadoPago no configurado' }
+        });
+    }
+
+    const { orderId, amount, title } = req.body;
+
+    try {
+        const preference = new Preference(mpClient);
+        const result = await preference.create({
+            body: {
+                items: [
+                    {
+                        id: orderId.toString(),
+                        title: title,
+                        quantity: 1,
+                        unit_price: Number(amount),
+                        currency_id: 'MXN'
+                    }
+                ],
+                back_urls: {
+                    success: `${process.env.FRONTEND_URL}/checkout/success`,
+                    failure: `${process.env.FRONTEND_URL}/checkout/failure`,
+                    pending: `${process.env.FRONTEND_URL}/checkout/pending`
+                },
+                auto_return: 'approved',
+                external_reference: orderId.toString(),
+                notification_url: `${process.env.API_URL}/v1/payments/webhooks/mercadopago`
+            }
+        });
+
+        // Save preference ID if needed
+        await pool.query(
+            `INSERT INTO payments
+             (order_id, amount, currency, payment_method, reference, status, provider_data)
+             VALUES ($1, $2, 'MXN', 'mercadopago', $3, 'pending', $4)`,
+            [orderId, amount, result.id, JSON.stringify(result)]
+        );
+
+        res.json({
+            id: result.id,
+            init_point: result.init_point,
+            sandbox_init_point: result.sandbox_init_point
+        });
+
+    } catch (error) {
+        console.error('MercadoPago Error:', error);
+        res.status(500).json({
+            error: { code: 'MP_ERROR', message: error.message }
+        });
+    }
+});
+
+/**
+ * POST /webhooks/mercadopago - Webhook MP
+ */
+app.post('/webhooks/mercadopago', async (req, res) => {
+    const { type, data } = req.body;
+    const topic = req.query.topic || type;
+    const id = req.query.id || data?.id;
+
+    try {
+        if (topic === 'payment') {
+            // Check payment status with MP API (optional, but recommended)
+            // For now, we just log it. In production, fetch payment details from MP.
+
+            // Log webhook
+            await pool.query(
+                `INSERT INTO bank_webhooks
+                 (bank_code, webhook_type, payload, processing_status)
+                 VALUES ('mercadopago', $1, $2, 'pending')`,
+                [topic, JSON.stringify(req.body)]
+            );
+
+            console.log(`Received MP Payment Notification: ${id}`);
+        }
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('MP Webhook Error:', error);
+        res.sendStatus(500);
+    }
+});
+
 
 /**
  * POST /webhooks/bank - Webhook para notificaciones bancarias

@@ -7,11 +7,11 @@ Este documento lista las tareas técnicas pendientes para poner en marcha el sis
 ### 1. Configuración de Credenciales
 *El sistema no funcionará sin estas claves externas.*
 - [x] **Preparar template:** Se creó `.env.example.fase3`.
-- [ ] **Crear archivo `.env`:** Copiar `.env.example.fase3` a `.env` y llenar valores.
-- [ ] **WAHA (WhatsApp):** Configurar conexión con instancia de WAHA para notificaciones.
-- [ ] **Pagos (SPEI + MercadoPago):** Configurar credenciales de API bancarias y MercadoPago.
+- [x] **Crear archivo `.env`:** Ejecutar `./setup_credentials.sh` para generar el archivo con secretos.
+- [x] **WAHA (WhatsApp):** Implementado soporte en `notifications-service`. Requiere configurar `WAHA_ENDPOINT` en `.env`.
+- [x] **Pagos (SPEI + MercadoPago):** Implementado soporte en `payments-service`. Requiere configurar `MP_ACCESS_TOKEN` en `.env`.
 - [ ] **Email:** Configurar credenciales SMTP (SendGrid/Gmail).
-- [ ] **Seguridad:** Generar secretos seguros para `JWT_SECRET` y contraseñas de BD (mínimo 32 caracteres).
+- [x] **Seguridad:** Script `setup_credentials.sh` genera secretos de 32 bytes para JWT y DB.
 
 ### 2. Base de Datos
 - [ ] **Inicializar BD:** Asegurar que PostgreSQL esté corriendo.
@@ -19,6 +19,7 @@ Este documento lista las tareas técnicas pendientes para poner en marcha el sis
   ```bash
   psql -d suscripciones_db -f database/migrations/003_add_fase3_enterprise.sql
   ```
+- [x] **Migración Providers:** Se creó `database/migrations/004_add_providers_columns.sql` para agregar columnas necesarias para WAHA y MercadoPago. **Pendiente Ejecutar.**
 
 ### 3. Integración Frontend - Microservicios (CRÍTICO)
 *El Frontend actual apunta a la API monolítica antigua (`/api/...`) en lugar de los nuevos Microservicios (`/v1/...`).*
