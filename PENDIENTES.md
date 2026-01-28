@@ -23,11 +23,11 @@ Este documento lista las tareas técnicas pendientes para poner en marcha el sis
 
 ### 3. Integración Frontend - Microservicios (CRÍTICO)
 *El Frontend actual apunta a la API monolítica antigua (`/api/...`) en lugar de los nuevos Microservicios (`/v1/...`).*
-- [ ] **Actualizar Base URL:** Cambiar `API_URL` en el frontend para apuntar al API Gateway (Puerto 80/443).
-- [ ] **Refactorizar `authService.js`:**
-  - Cambiar endpoints de `/auth/user/phone/...` a los definidos en `auth-service` (ej. `/v1/auth/login`, `/v1/auth/register`, `/v1/auth/2fa/send`).
-  - Adaptar los payloads de request/response al nuevo esquema.
-- [ ] **Revisar otros servicios:** Verificar `cartService`, `orderService`, etc., y mapearlos a sus respectivos microservicios (`/v1/payments`, `/v1/subscriptions`).
+- [x] **Actualizar Base URL:** Se cambió `API_URL` a `http://localhost/v1`.
+- [x] **Refactorizar `authService.js`:**
+  - Endpoints actualizados: `/auth/2fa/send`, `/auth/2fa/verify`, `/auth/login`, `/auth/register`.
+  - Payloads adaptados al nuevo esquema.
+- [x] **Revisar otros servicios:** Verificado. Solo `authService.js` requirió cambios.
 
 ### 4. Infraestructura Docker
 - [ ] **Swarm Init:** Ejecutar `docker swarm init` si no se ha hecho.

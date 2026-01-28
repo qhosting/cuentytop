@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost/v1';
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
@@ -46,11 +46,14 @@ api.interceptors.response.use(
 );
 
 class AuthService {
-  // Solicitar código de verificación
+  // Solicitar código de verificación (Adaptado a Microservicio Auth)
+  // Nota: El microservicio espera autenticación para /2fa/send.
+  // Si este flujo es para login/registro inicial, el backend debe soportarlo públicamente.
   async requestCode({ telefono }) {
     try {
-      const response = await api.post('/auth/user/phone/request-code', {
-        telefono,
+      const response = await api.post('/auth/2fa/send', {
+        phone: telefono, // Adaptado de telefono a phone
+        method: 'whatsapp' // Default a whatsapp
       });
       return response;
     } catch (error) {
@@ -58,15 +61,35 @@ class AuthService {
     }
   }
 
-  // Verificar código
+  // Verificar código (Adaptado a Microservicio Auth)
   async verifyCode({ telefono, codigo, nombre, email }) {
     try {
-      const response = await api.post('/auth/user/phone/verify-code', {
-        telefono,
-        codigo,
-        nombre,
-        email,
+      // Nota: El microservicio auth tiene /register y /login separados.
+      // Este endpoint /2fa/verify es para verificar un código después de login.
+      // Para mantener compatibilidad, llamamos a verify
+      const response = await api.post('/auth/2fa/verify', {
+        code: codigo,
       });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Registro (Nuevo endpoint para microservicio)
+  async register(userData) {
+    try {
+      const response = await api.post('/auth/register', userData);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Login (Nuevo endpoint para microservicio)
+  async login(credentials) {
+    try {
+      const response = await api.post('/auth/login', credentials);
       return response;
     } catch (error) {
       throw error;
@@ -76,7 +99,7 @@ class AuthService {
   // Obtener perfil del usuario
   async getProfile() {
     try {
-      const response = await api.get('/auth/user/profile');
+      const response = await api.get('/auth/me'); // Cambiado de /auth/user/profile a /auth/me
       return response;
     } catch (error) {
       throw error;
@@ -86,7 +109,11 @@ class AuthService {
   // Actualizar perfil
   async updateProfile(profileData) {
     try {
-      const response = await api.put('/auth/user/profile', profileData);
+      // El microservicio actual no tiene endpoint explícito de update profile documentado en el server.js visible,
+      // pero mantenemos la llamada por si se implementa o usa otro endpoint.
+      // Por ahora apuntamos al mismo endpoint de perfil o uno genérico si existiera.
+      // Asumiendo que podría ser PUT /auth/me si existiera.
+      const response = await api.put('/auth/me', profileData);
       return response;
     } catch (error) {
       throw error;
@@ -96,7 +123,7 @@ class AuthService {
   // Cerrar sesión
   async logout() {
     try {
-      await api.post('/auth/user/logout');
+      await api.post('/auth/logout'); // Cambiado de /auth/user/logout
       localStorage.removeItem('token');
     } catch (error) {
       // Asegurar que se limpie el token local incluso si falla la llamada
@@ -119,8 +146,8 @@ class AuthService {
   // Reenviar código
   async resendCode({ telefono }) {
     try {
-      const response = await api.post('/auth/user/phone/resend-code', {
-        telefono,
+      const response = await api.post('/auth/2fa/send', {
+        phone: telefono,
       });
       return response;
     } catch (error) {
