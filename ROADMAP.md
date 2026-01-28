@@ -15,7 +15,7 @@ Este documento describe la estrategia de evolución del proyecto Cuenty, partien
 
 ### 1. Infraestructura y Configuración
 - [ ] Configuración completa de variables de entorno (`.env`).
-- [ ] Obtención e integración de credenciales (Twilio, SMTP, Bancos, Chatwoot).
+- [ ] Obtención e integración de credenciales (WAHA, SMTP, Bancos, MercadoPago, Chatwoot).
 - [ ] Despliegue de Docker Swarm y bases de datos.
 - [ ] Ejecución de migraciones de base de datos (`003_add_fase3_enterprise.sql`).
 
@@ -26,8 +26,8 @@ Este documento describe la estrategia de evolución del proyecto Cuenty, partien
 
 ### 3. Testing y QA
 - [ ] Pruebas de conectividad (Health Checks).
-- [ ] Pruebas de integración de flujos críticos (Registro, 2FA, Checkout, Pagos SPEI).
-- [ ] Validación de Webhooks bancarios y notificaciones.
+- [ ] Pruebas de integración de flujos críticos (Registro, 2FA, Checkout, Pagos SPEI/MercadoPago).
+- [ ] Validación de Webhooks bancarios y notificaciones WAHA.
 
 ---
 

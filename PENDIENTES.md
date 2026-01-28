@@ -6,11 +6,12 @@ Este documento lista las tareas técnicas pendientes para poner en marcha el sis
 
 ### 1. Configuración de Credenciales
 *El sistema no funcionará sin estas claves externas.*
-- [ ] **Crear archivo `.env`:** Copiar `.env.example.fase3` a `.env` en la raíz.
-- [ ] **Twilio:** Configurar `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y `TWILIO_PHONE_NUMBER`.
-- [ ] **Bancos (SPEI):** Configurar credenciales de API simuladas o reales (BBVA, Santander).
+- [x] **Preparar template:** Se creó `.env.example.fase3`.
+- [ ] **Crear archivo `.env`:** Copiar `.env.example.fase3` a `.env` y llenar valores.
+- [ ] **WAHA (WhatsApp):** Configurar conexión con instancia de WAHA para notificaciones.
+- [ ] **Pagos (SPEI + MercadoPago):** Configurar credenciales de API bancarias y MercadoPago.
 - [ ] **Email:** Configurar credenciales SMTP (SendGrid/Gmail).
-- [ ] **Seguridad:** Generar secretos seguros para `JWT_SECRET` y contraseñas de BD.
+- [ ] **Seguridad:** Generar secretos seguros para `JWT_SECRET` y contraseñas de BD (mínimo 32 caracteres).
 
 ### 2. Base de Datos
 - [ ] **Inicializar BD:** Asegurar que PostgreSQL esté corriendo.
