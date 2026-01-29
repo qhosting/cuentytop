@@ -59,5 +59,13 @@ else
     exit 1
 fi
 
+# 4. Migración Chatwoot
+if [ -f "database/migrations/005_add_chatwoot_tables.sql" ]; then
+    run_sql "database/migrations/005_add_chatwoot_tables.sql"
+else
+    echo "❌ Error: No se encuentra 005_add_chatwoot_tables.sql"
+    exit 1
+fi
+
 echo "✨ Migraciones completadas exitosamente."
 echo "✅ La base de datos está lista para Fase 3 Enterprise."

@@ -135,7 +135,7 @@ const performBackup = async () => {
             };
 
             const file = await drive.files.create({
-                resource: fileMetadata,
+                requestBody: fileMetadata,
                 media: media,
                 fields: 'id'
             });

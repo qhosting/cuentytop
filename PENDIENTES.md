@@ -8,23 +8,23 @@ Este documento lista las tareas técnicas pendientes para poner en marcha el sis
 *El sistema no funcionará sin estas claves externas.*
 - [x] **Preparar template:** Se creó `.env.example.fase3`.
 - [x] **Crear archivo `.env`:** Ejecutar `./setup_credentials.sh` para generar el archivo con secretos.
-- [x] **WAHA (WhatsApp):** Implementado soporte en `notifications-service`. Requiere configurar `WAHA_ENDPOINT` en `.env`.
-- [x] **Pagos (SPEI + MercadoPago):** Implementado soporte en `payments-service`. Requiere configurar `MP_ACCESS_TOKEN` en `.env`.
-- [ ] **Email:** Configurar credenciales SMTP (SendGrid/Gmail).
-- [x] **Seguridad:** Script `setup_credentials.sh` genera secretos de 32 bytes para JWT y DB.
+- [x] **WAHA (WhatsApp):** Implementado soporte en `notifications-service`.
+- [x] **Pagos (SPEI + MercadoPago):** Implementado soporte en `payments-service`.
+- [x] **Email:** Configurar credenciales SMTP en `.env`.
+- [x] **Seguridad:** Script `setup_credentials.sh` genera secretos seguros.
 
 ### 2. Base de Datos
-- [x] **Preparar Scripts:** Se crearon `database/migrations/003_add_fase3_enterprise.sql` y `init_db.sh`.
-- [ ] **Inicializar BD:** Ejecutar `./init_db.sh` para aplicar todas las migraciones (Fase 3 + Providers).
-  > **Nota:** Requiere que el contenedor Docker de base de datos esté corriendo.
+- [x] **Preparar Scripts:** Se crearon `init_db.sh` y las migraciones (`003`, `004`, `005`).
+- [ ] **Inicializar BD:** Ejecutar `./init_db.sh` para aplicar:
+  - `003_add_fase3_enterprise.sql` (Schema Enterprise)
+  - `004_add_providers_columns.sql` (WAHA/MP)
+  - `005_add_chatwoot_tables.sql` (Chatwoot)
 
 ### 3. Integración Frontend - Microservicios (CRÍTICO)
 *El Frontend actual apunta a la API monolítica antigua (`/api/...`) en lugar de los nuevos Microservicios (`/v1/...`).*
 - [x] **Actualizar Base URL:** Se cambió `API_URL` a `http://localhost/v1`.
-- [x] **Refactorizar `authService.js`:**
-  - Endpoints actualizados: `/auth/2fa/send`, `/auth/2fa/verify`, `/auth/login`, `/auth/register`.
-  - Payloads adaptados al nuevo esquema.
-- [x] **Revisar otros servicios:** Verificado. Solo `authService.js` requirió cambios.
+- [x] **Refactorizar `authService.js`:** Adaptado a endpoints de microservicios.
+- [x] **Revisar otros servicios:** Verificado.
 
 ### 4. Infraestructura Docker
 - [ ] **Swarm Init:** Ejecutar `docker swarm init` si no se ha hecho.
@@ -36,33 +36,16 @@ Este documento lista las tareas técnicas pendientes para poner en marcha el sis
 ## 🟡 Prioridad Media (Funcionalidad)
 
 ### 1. Testing de Integración
-- [ ] **Health Checks:** Verificar respuesta 200 OK en:
-  - `http://localhost/v1/auth/health`
-  - `http://localhost/v1/payments/health`
-  - `http://localhost/v1/notifications/health`
-- [ ] **Flujo de Usuario:** Probar registro manual y login.
-- [ ] **Flujo de Pago:** Simular una transacción SPEI y verificar la recepción del webhook.
+- [ ] **Health Checks:** Verificar respuesta 200 OK en `http://localhost/v1/*/health`.
+- [ ] **Flujo de Usuario:** Probar registro, login y pago con los nuevos servicios.
 
 ### 2. Configuración de Servicios Auxiliares
-- [ ] **Chatwoot:** Configurar token de integración para el chat de soporte.
-- [ ] **Google Analytics:** Configurar `GA4_MEASUREMENT_ID` para el servicio de analytics.
+- [x] **Chatwoot:** Microservicio implementado y migraciones creadas.
+- [ ] **Google Analytics:** Configurar `GA4_MEASUREMENT_ID`.
 
 ---
 
 ## 🟢 Prioridad Baja (Optimización)
 
-- [ ] **Limpieza:** Eliminar código muerto del backend monolítico si ya no se usa.
-- [ ] **Documentación:** Actualizar Swagger si hubo cambios en los endpoints durante la integración del frontend.
-- [ ] **Logs:** Configurar rotación de logs en Docker.
-
----
-
-## 🛠️ Guía de Endpoints (Referencia para Frontend)
-
-| Acción | Endpoint Viejo (Monolito) | Endpoint Nuevo (Microservicios) |
-|--------|---------------------------|---------------------------------|
-| Registro | `/api/auth/register` | `POST /v1/auth/register` |
-| Login | `/api/auth/login` | `POST /v1/auth/login` |
-| 2FA Enviar | `/api/auth/user/phone/request-code` | `POST /v1/auth/2fa/send` |
-| 2FA Verificar | `/api/auth/user/phone/verify-code` | `POST /v1/auth/2fa/verify` |
-| Perfil | `/api/auth/user/profile` | `GET /v1/auth/me` |
+- [ ] **Limpieza:** Eliminar código muerto del backend monolítico.
+- [ ] **Documentación:** Actualizar Swagger con los nuevos endpoints.
