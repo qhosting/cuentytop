@@ -7,6 +7,7 @@ FROM node:18-alpine
 # Instalar dependencias del sistema
 RUN apk add --no-cache \
     postgresql-client \
+    mongodb-tools \
     curl
 
 # Crear directorio de trabajo

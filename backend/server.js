@@ -12,6 +12,9 @@ require('dotenv').config();
 // Importar configuración de base de datos
 const { checkConnection } = require('./config/database');
 
+// Importar servicio de backup
+const { initBackupService } = require('./services/backupService');
+
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
 const servicioRoutes = require('./routes/servicioRoutes');
@@ -329,6 +332,11 @@ const server = app.listen(PORT, async () => {
     if (!dbConnected) {
         console.error('⚠️  ADVERTENCIA: No se pudo conectar a la base de datos');
         process.exit(1);
+    }
+
+    // Inicializar servicio de backup automático
+    if (process.env.NODE_ENV === 'production' || process.env.ENABLE_BACKUPS === 'true') {
+        initBackupService();
     }
 
     // Registrar inicio en logs
