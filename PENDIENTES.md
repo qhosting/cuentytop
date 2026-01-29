@@ -14,12 +14,9 @@ Este documento lista las tareas técnicas pendientes para poner en marcha el sis
 - [x] **Seguridad:** Script `setup_credentials.sh` genera secretos de 32 bytes para JWT y DB.
 
 ### 2. Base de Datos
-- [ ] **Inicializar BD:** Asegurar que PostgreSQL esté corriendo.
-- [ ] **Migración Fase 3:** Ejecutar el script SQL para crear las tablas de la arquitectura enterprise.
-  ```bash
-  psql -d suscripciones_db -f database/migrations/003_add_fase3_enterprise.sql
-  ```
-- [x] **Migración Providers:** Se creó `database/migrations/004_add_providers_columns.sql` para agregar columnas necesarias para WAHA y MercadoPago. **Pendiente Ejecutar.**
+- [x] **Preparar Scripts:** Se crearon `database/migrations/003_add_fase3_enterprise.sql` y `init_db.sh`.
+- [ ] **Inicializar BD:** Ejecutar `./init_db.sh` para aplicar todas las migraciones (Fase 3 + Providers).
+  > **Nota:** Requiere que el contenedor Docker de base de datos esté corriendo.
 
 ### 3. Integración Frontend - Microservicios (CRÍTICO)
 *El Frontend actual apunta a la API monolítica antigua (`/api/...`) en lugar de los nuevos Microservicios (`/v1/...`).*
