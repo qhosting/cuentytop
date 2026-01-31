@@ -32,7 +32,13 @@ echo "✅ Base de datos encontrada en contenedor: $DB_CONTAINER"
 run_sql() {
     local file=$1
     echo "📂 Ejecutando $file..."
-    docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" < "$file"
+    if [ -n "$DATABASE_URL" ]; then
+        # Usar DATABASE_URL si está disponible
+        docker exec -i "$DB_CONTAINER" psql "$DATABASE_URL" < "$file"
+    else
+        # Usar variables individuales
+        docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" < "$file"
+    fi
 }
 
 echo "🚀 Iniciando migraciones..."

@@ -66,16 +66,18 @@ const performBackup = async () => {
 
     try {
         // 1. Dump PostgreSQL
-        if (process.env.PG_URI || (process.env.DB_HOST && process.env.DB_NAME)) {
+        const pgUri = process.env.DATABASE_URL || process.env.PG_URI;
+
+        if (pgUri || (process.env.DB_HOST && process.env.DB_NAME)) {
             console.log('📦 Creando dump de PostgreSQL...');
 
             let pgCmd;
             let env = {};
 
-            if (process.env.PG_URI) {
-                // Si existe PG_URI, usarlo directamente
+            if (pgUri) {
+                // Si existe DATABASE_URL/PG_URI, usarlo directamente
                 // pg_dump "postgres://user:pass@host:port/db" -f file
-                pgCmd = `pg_dump "${process.env.PG_URI}" -F p -f "${pgDumpFile}"`;
+                pgCmd = `pg_dump "${pgUri}" -F p -f "${pgDumpFile}"`;
             } else {
                 // Usar variables individuales
                 pgCmd = `pg_dump -h ${process.env.DB_HOST} -U ${process.env.DB_USER} -d ${process.env.DB_NAME} -F p -f "${pgDumpFile}"`;
