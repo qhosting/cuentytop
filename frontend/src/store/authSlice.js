@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { useSelector, useDispatch } from 'react-redux';
 import authService from '../services/authService';
+
 
 // Estado inicial
 const initialState = {
@@ -239,6 +241,7 @@ export const { clearError, clearMessage, setLoading } = authSlice.actions;
 
 // Hook personalizado para usar el slice
 export const useAuth = () => {
+  const dispatch = useDispatch();
   const state = useSelector((state) => state.auth);
   return {
     ...state,
