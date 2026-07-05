@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const fase2Controller = require('../controllers/fase2Controller');
-const auth = require('../middleware/auth');
+const { authenticateToken: auth } = require('../middleware/auth');
 
 // ==================== RUTAS 2FA ====================
 
