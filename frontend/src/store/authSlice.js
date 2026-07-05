@@ -242,9 +242,15 @@ export const { clearError, clearMessage, setLoading } = authSlice.actions;
 // Hook personalizado para usar el slice
 export const useAuth = () => {
   const dispatch = useDispatch();
-  const state = useSelector((state) => state.auth);
+  const state = useSelector((s) => s.auth);
   return {
     ...state,
+    checkAuth: () => dispatch(checkAuth()),
+    requestCode: (data) => dispatch(requestCode(data)),
+    verifyCode: (data) => dispatch(verifyCode(data)),
+    getProfile: () => dispatch(getProfile()),
+    updateProfile: (data) => dispatch(updateProfile(data)),
+    logout: () => dispatch(logout()),
     clearError: () => dispatch(clearError()),
     clearMessage: () => dispatch(clearMessage()),
     setLoading: (loading) => dispatch(setLoading(loading)),

@@ -2,13 +2,13 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
-import { Provider } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
 
 // Store de Redux
 import { store } from './store/store';
 
 // Componentes de autenticación
-import { useAuth } from './store/authSlice';
+import { useAuth, checkAuth as checkAuthThunk } from './store/authSlice';
 
 // Páginas principales
 import HomePage from './pages/HomePage';
@@ -262,12 +262,12 @@ const AdminRoute = ({ children }) => {
 };
 
 const AppContent = () => {
-  const { checkAuth } = useAuth();
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    // Verificar autenticación al cargar la app
-    checkAuth();
-  }, [checkAuth]);
+    // Verificar autenticación al cargar la app (solo una vez)
+    dispatch(checkAuthThunk());
+  }, [dispatch]);
 
   return (
     <ThemeProvider theme={theme}>
