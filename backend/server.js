@@ -187,7 +187,7 @@ app.get('/health', async (req, res) => {
 });
 
 // API Info
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
     res.json({
         success: true,
         mensaje: 'Sistema de Gestión de Suscripciones',
