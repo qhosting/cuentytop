@@ -261,7 +261,7 @@ const AdminRoute = ({ children }) => {
   return isAuthenticated && user?.tipo === 'admin' ? children : <Navigate to="/" replace />;
 };
 
-const App = () => {
+const AppContent = () => {
   const { checkAuth } = useAuth();
 
   useEffect(() => {
@@ -270,50 +270,56 @@ const App = () => {
   }, [checkAuth]);
 
   return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <div className="app">
+          <Navbar />
+          <main style={{ minHeight: 'calc(100vh - 140px)', paddingTop: '80px' }}>
+            <Routes>
+              {/* Rutas públicas */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              
+              {/* Rutas protegidas */}
+              <Route path="/carrito" element={
+                <ProtectedRoute>
+                  <CartPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/ordenes" element={
+                <ProtectedRoute>
+                  <OrdersPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/perfil" element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } />
+              
+              {/* Rutas de administrador */}
+              <Route path="/admin/*" element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              } />
+              
+              {/* Ruta por defecto */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </ThemeProvider>
+  );
+};
+
+const App = () => {
+  return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Router>
-          <div className="app">
-            <Navbar />
-            <main style={{ minHeight: 'calc(100vh - 140px)', paddingTop: '80px' }}>
-              <Routes>
-                {/* Rutas públicas */}
-                <Route path="/" element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                
-                {/* Rutas protegidas */}
-                <Route path="/carrito" element={
-                  <ProtectedRoute>
-                    <CartPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/ordenes" element={
-                  <ProtectedRoute>
-                    <OrdersPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/perfil" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
-                
-                {/* Rutas de administrador */}
-                <Route path="/admin/*" element={
-                  <AdminRoute>
-                    <AdminDashboard />
-                  </AdminRoute>
-                } />
-                
-                {/* Ruta por defecto */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </Router>
-      </ThemeProvider>
+      <AppContent />
     </Provider>
   );
 };
