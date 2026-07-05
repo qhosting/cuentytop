@@ -196,6 +196,22 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/fase2', fase2Routes);
 
 // ================================
+// SERVIR ARCHIVOS ESTÁTICOS
+// ================================
+
+// Servir archivos estáticos del frontend (React SPA compilado en public)
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Cualquier ruta de cliente (no API/health) debe servir el index.html
+app.get('*', (req, res, next) => {
+    if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/health')) {
+        return next();
+    }
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ================================
 // MANEJO DE ERRORES
 // ================================
 
