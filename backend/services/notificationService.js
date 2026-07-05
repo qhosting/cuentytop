@@ -16,11 +16,12 @@ class NotificationService {
         });
         
         // Configurar cliente Twilio
-        if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-            this.twilioClient = twilio(
-                process.env.TWILIO_ACCOUNT_SID,
-                process.env.TWILIO_AUTH_TOKEN
-            );
+        const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+        const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+        if (twilioSid && twilioSid.startsWith('AC') && twilioToken) {
+            this.twilioClient = twilio(twilioSid, twilioToken);
+        } else {
+            console.log('⚠️  Twilio deshabilitado (TWILIO_ACCOUNT_SID no configurado o inválido)');
         }
     }
     
