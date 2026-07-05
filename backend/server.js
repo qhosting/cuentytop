@@ -70,7 +70,7 @@ const corsOptions = {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
-app.use(cors(corsOptions));
+app.use('/api', cors(corsOptions));
 
 // Rate Limiting
 const limiter = rateLimit({
