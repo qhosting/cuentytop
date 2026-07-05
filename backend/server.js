@@ -123,7 +123,28 @@ app.use(express.urlencoded({
 
 // Sanitización de datos
 app.use(mongoSanitize());
-app.use(xss());
+
+// Custom XSS Sanitizer middleware
+const sanitizeObject = (obj) => {
+    if (typeof obj === 'string') return xss(obj);
+    if (Array.isArray(obj)) return obj.map(sanitizeObject);
+    if (obj !== null && typeof obj === 'object') {
+        const sanitized = {};
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                sanitized[key] = sanitizeObject(obj[key]);
+            }
+        }
+        return sanitized;
+    }
+    return obj;
+};
+app.use((req, res, next) => {
+    if (req.body) req.body = sanitizeObject(req.body);
+    if (req.query) req.query = sanitizeObject(req.query);
+    if (req.params) req.params = sanitizeObject(req.params);
+    next();
+});
 
 // Prevenir parameter pollution
 app.use(hpp());
